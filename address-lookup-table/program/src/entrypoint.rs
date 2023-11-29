@@ -1,7 +1,7 @@
 //! Program entrypoint
 
 use {
-    crate::{error::TokenError, processor::Processor},
+    crate::{error::AddressLookupError, processor::process},
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program_error::PrintProgramError,
         pubkey::Pubkey,
@@ -14,7 +14,7 @@ fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    if let Err(error) = Processor::process(program_id, accounts, instruction_data) {
+    if let Err(error) = process(program_id, accounts, instruction_data) {
         error.print::<AddressLookupError>();
         return Err(error);
     }

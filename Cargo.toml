@@ -2,3 +2,5 @@
 members = [
     "address-lookup-table/program"
 ]
+
+resolver = "2"

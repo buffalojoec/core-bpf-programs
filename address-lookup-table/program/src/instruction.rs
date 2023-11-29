@@ -1,5 +1,4 @@
 use {
-    crate::address_lookup_table::id,
     serde::{Deserialize, Serialize},
     solana_program::{
         clock::Slot,
@@ -10,7 +9,7 @@ use {
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub enum ProgramInstruction {
+pub enum AddressLookupInstruction {
     /// Create an address lookup table
     ///
     /// # Account references
@@ -78,7 +77,7 @@ pub fn derive_lookup_table_address(
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[authority_address.as_ref(), &recent_block_slot.to_le_bytes()],
-        &id(),
+        &crate::id(),
     )
 }
 
@@ -93,8 +92,8 @@ fn create_lookup_table_common(
     let (lookup_table_address, bump_seed) =
         derive_lookup_table_address(&authority_address, recent_slot);
     let instruction = Instruction::new_with_bincode(
-        id(),
-        &ProgramInstruction::CreateLookupTable {
+        crate::id(),
+        &AddressLookupInstruction::CreateLookupTable {
             recent_slot,
             bump_seed,
         },
@@ -146,8 +145,8 @@ pub fn create_lookup_table(
 /// lookup tables cannot be frozen.
 pub fn freeze_lookup_table(lookup_table_address: Pubkey, authority_address: Pubkey) -> Instruction {
     Instruction::new_with_bincode(
-        id(),
-        &ProgramInstruction::FreezeLookupTable,
+        crate::id(),
+        &AddressLookupInstruction::FreezeLookupTable,
         vec![
             AccountMeta::new(lookup_table_address, false),
             AccountMeta::new_readonly(authority_address, true),
@@ -176,8 +175,8 @@ pub fn extend_lookup_table(
     }
 
     Instruction::new_with_bincode(
-        id(),
-        &ProgramInstruction::ExtendLookupTable { new_addresses },
+        crate::id(),
+        &AddressLookupInstruction::ExtendLookupTable { new_addresses },
         accounts,
     )
 }
@@ -190,8 +189,8 @@ pub fn deactivate_lookup_table(
     authority_address: Pubkey,
 ) -> Instruction {
     Instruction::new_with_bincode(
-        id(),
-        &ProgramInstruction::DeactivateLookupTable,
+        crate::id(),
+        &AddressLookupInstruction::DeactivateLookupTable,
         vec![
             AccountMeta::new(lookup_table_address, false),
             AccountMeta::new_readonly(authority_address, true),
@@ -208,8 +207,8 @@ pub fn close_lookup_table(
     recipient_address: Pubkey,
 ) -> Instruction {
     Instruction::new_with_bincode(
-        id(),
-        &ProgramInstruction::CloseLookupTable,
+        crate::id(),
+        &AddressLookupInstruction::CloseLookupTable,
         vec![
             AccountMeta::new(lookup_table_address, false),
             AccountMeta::new_readonly(authority_address, true),

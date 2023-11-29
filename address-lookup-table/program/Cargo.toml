@@ -3,9 +3,17 @@ name = "address-lookup-table"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "lib"]
+[features]
+no-entrypoint = []
+test-sbf = []
 
 [dependencies]
+bincode = "1.3.3"
+bytemuck = "1.14.0"
+serde = { version = "1.0.193", features = ["derive"] }
 solana-program = "1.17.2"
+spl-pod = "0.1.0"
 spl-program-error = "0.3.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]

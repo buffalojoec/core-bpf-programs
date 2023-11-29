@@ -1,10 +1,9 @@
 use {
     serde::{Deserialize, Serialize},
-    solana_frozen_abi_macro::{AbiEnumVisitor, AbiExample},
     solana_program::{
         address_lookup_table::error::AddressLookupError,
         clock::Slot,
-        instruction::InstructionError,
+        program_error::ProgramError,
         pubkey::Pubkey,
         slot_hashes::{SlotHashes, MAX_ENTRIES},
     },
@@ -17,6 +16,15 @@ pub const LOOKUP_TABLE_MAX_ADDRESSES: usize = 256;
 /// The serialized size of lookup table metadata
 pub const LOOKUP_TABLE_META_SIZE: usize = 56;
 
+/// The definition of address lookup table accounts.
+///
+/// As used by the `crate::message::v0` message format.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct AddressLookupTableAccount {
+    pub key: Pubkey,
+    pub addresses: Vec<Pubkey>,
+}
+
 /// Activation status of a lookup table
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum LookupTableStatus {
@@ -26,7 +34,7 @@ pub enum LookupTableStatus {
 }
 
 /// Address lookup table metadata
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, AbiExample)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct LookupTableMeta {
     /// Lookup tables cannot be closed until the deactivation slot is
     /// no longer "recent" (not accessible in the `SlotHashes` sysvar).
@@ -103,7 +111,7 @@ impl LookupTableMeta {
 }
 
 /// Program account states
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, AbiExample, AbiEnumVisitor)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[allow(clippy::large_enum_variant)]
 pub enum ProgramState {
     /// Account is not initialized.
@@ -112,7 +120,7 @@ pub enum ProgramState {
     LookupTable(LookupTableMeta),
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, AbiExample)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AddressLookupTable<'a> {
     pub meta: LookupTableMeta,
     pub addresses: Cow<'a, [Pubkey]>,
@@ -124,13 +132,13 @@ impl<'a> AddressLookupTable<'a> {
     pub fn overwrite_meta_data(
         data: &mut [u8],
         lookup_table_meta: LookupTableMeta,
-    ) -> Result<(), InstructionError> {
+    ) -> Result<(), ProgramError> {
         let meta_data = data
             .get_mut(0..LOOKUP_TABLE_META_SIZE)
-            .ok_or(InstructionError::InvalidAccountData)?;
+            .ok_or(ProgramError::InvalidAccountData)?;
         meta_data.fill(0);
         bincode::serialize_into(meta_data, &ProgramState::LookupTable(lookup_table_meta))
-            .map_err(|_| InstructionError::GenericError)?;
+            .map_err(|_| ProgramError::InvalidAccountData)?; // TODO: GenericError
         Ok(())
     }
 
@@ -178,7 +186,7 @@ impl<'a> AddressLookupTable<'a> {
     }
 
     /// Serialize an address table including its addresses
-    pub fn serialize_for_tests(self) -> Result<Vec<u8>, InstructionError> {
+    pub fn serialize_for_tests(self) -> Result<Vec<u8>, ProgramError> {
         let mut data = vec![0; LOOKUP_TABLE_META_SIZE];
         Self::overwrite_meta_data(&mut data, self.meta)?;
         self.addresses.iter().for_each(|address| {
@@ -189,24 +197,24 @@ impl<'a> AddressLookupTable<'a> {
 
     /// Efficiently deserialize an address table without allocating
     /// for stored addresses.
-    pub fn deserialize(data: &'a [u8]) -> Result<AddressLookupTable<'a>, InstructionError> {
+    pub fn deserialize(data: &'a [u8]) -> Result<AddressLookupTable<'a>, ProgramError> {
         let program_state: ProgramState =
-            bincode::deserialize(data).map_err(|_| InstructionError::InvalidAccountData)?;
+            bincode::deserialize(data).map_err(|_| ProgramError::InvalidAccountData)?;
 
         let meta = match program_state {
             ProgramState::LookupTable(meta) => Ok(meta),
-            ProgramState::Uninitialized => Err(InstructionError::UninitializedAccount),
+            ProgramState::Uninitialized => Err(ProgramError::UninitializedAccount),
         }?;
 
         let raw_addresses_data = data.get(LOOKUP_TABLE_META_SIZE..).ok_or({
             // Should be impossible because table accounts must
             // always be LOOKUP_TABLE_META_SIZE in length
-            InstructionError::InvalidAccountData
+            ProgramError::InvalidAccountData
         })?;
         let addresses: &[Pubkey] = bytemuck::try_cast_slice(raw_addresses_data).map_err(|_| {
             // Should be impossible because raw address data
             // should be aligned and sized in multiples of 32 bytes
-            InstructionError::InvalidAccountData
+            ProgramError::InvalidAccountData
         })?;
 
         Ok(Self {
@@ -218,7 +226,7 @@ impl<'a> AddressLookupTable<'a> {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::hash::Hash};
+    use {super::*, solana_program::hash::Hash};
 
     impl AddressLookupTable<'_> {
         fn new_for_tests(meta: LookupTableMeta, num_addresses: usize) -> Self {
@@ -340,12 +348,12 @@ mod tests {
     fn test_deserialize() {
         assert_eq!(
             AddressLookupTable::deserialize(&[]).err(),
-            Some(InstructionError::InvalidAccountData),
+            Some(ProgramError::InvalidAccountData),
         );
 
         assert_eq!(
             AddressLookupTable::deserialize(&[0u8; LOOKUP_TABLE_META_SIZE]).err(),
-            Some(InstructionError::UninitializedAccount),
+            Some(ProgramError::UninitializedAccount),
         );
 
         fn test_case(num_addresses: usize) {
