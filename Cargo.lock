@@ -8,7 +8,10 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "bytemuck",
+ "log",
  "serde",
+ "solana-frozen-abi",
+ "solana-frozen-abi-macro",
  "solana-program",
  "spl-pod",
  "spl-program-error",
