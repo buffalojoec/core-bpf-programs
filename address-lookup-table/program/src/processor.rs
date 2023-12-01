@@ -1,7 +1,7 @@
 //! Program state processor
 
 use {
-    crate::error::{AddressLookupError, ToProgramError},
+    crate::error::AddressLookupError,
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         address_lookup_table::{
@@ -16,7 +16,7 @@ use {
         msg,
         program::invoke,
         program_error::ProgramError,
-        program_utils::limited_deserialize,
+        program_utils,
         pubkey::{Pubkey, PUBKEY_BYTES},
         rent::Rent,
         slot_hashes::SlotHashes,
@@ -25,11 +25,23 @@ use {
     },
 };
 
-/// Maximum over-the-wire size of a Transaction
-///   1280 is IPv6 minimum MTU
-///   40 bytes is the size of the IPv6 header
-///   8 bytes is the size of the fragment header
-pub const PACKET_DATA_SIZE: usize = 1280 - 40 - 8;
+/// DOES NOT BELONG IN PROGRAM CRATE
+///
+/// This is a temporary hack to get around the fact that the constant
+/// `PACKET_DATA_SIZE` and the function utilizing it, `limited_deserialize`,
+/// are not exported from the `solana_program` crate.
+/// Instead, they live inside of the root `solana_sdk` crate, which can't be
+/// used by BPF programs in its entirety.
+///
+/// We must move these items into `solana_program`.
+const PACKET_DATA_SIZE: usize = 1280 - 40 - 8;
+fn limited_deserialize<T>(input: &[u8]) -> Result<T, ProgramError>
+where
+    T: serde::de::DeserializeOwned,
+{
+    program_utils::limited_deserialize(input, PACKET_DATA_SIZE as u64)
+        .map_err(|_| ProgramError::InvalidInstructionData)
+}
 
 fn process_create_lookup_table(
     program_id: &Pubkey,
@@ -41,8 +53,6 @@ fn process_create_lookup_table(
     let lookup_table_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
-    // TODO: I _think_ we might need to include the system program in here now
-    // let _system_program_info = next_account_info(account_info_iter)?;
 
     if AddressLookupTable::deserialize(&lookup_table_info.data.borrow()).is_ok() {
         msg!("Table account must not be allocated");
@@ -134,8 +144,8 @@ fn process_freeze_lookup_table(
     }
 
     let lookup_table_data = lookup_table_info.data.borrow();
-    let lookup_table =
-        AddressLookupTable::deserialize(&lookup_table_data).map_to_program_error()?;
+    let lookup_table = AddressLookupTable::deserialize(&lookup_table_data)
+        .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToDeserialize.into())?;
 
     if lookup_table.meta.authority.is_none() {
         msg!("Lookup table is already frozen");
@@ -159,7 +169,7 @@ fn process_freeze_lookup_table(
         &mut lookup_table_info.try_borrow_mut_data()?,
         lookup_table_meta,
     )
-    .map_to_program_error()?;
+    .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToSerialize.into())?;
 
     Ok(())
 }
@@ -183,8 +193,8 @@ fn process_extend_lookup_table(
     }
 
     let lookup_table_data = lookup_table_info.data.borrow();
-    let mut lookup_table =
-        AddressLookupTable::deserialize(&lookup_table_data).map_to_program_error()?;
+    let mut lookup_table = AddressLookupTable::deserialize(&lookup_table_data)
+        .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToDeserialize.into())?;
 
     if lookup_table.meta.authority.is_none() {
         return Err(AddressLookupError::LookupTableImmutable.into());
@@ -239,7 +249,7 @@ fn process_extend_lookup_table(
             &mut lookup_table_info.try_borrow_mut_data()?,
             lookup_table_meta,
         )
-        .map_to_program_error()?;
+        .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToSerialize.into())?;
     }
 
     let required_lamports = <Rent as Sysvar>::get()?
@@ -280,8 +290,8 @@ fn process_deactivate_lookup_table(
     }
 
     let lookup_table_data = lookup_table_info.data.borrow();
-    let lookup_table =
-        AddressLookupTable::deserialize(&lookup_table_data).map_to_program_error()?;
+    let lookup_table = AddressLookupTable::deserialize(&lookup_table_data)
+        .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToDeserialize.into())?;
 
     if lookup_table.meta.authority.is_none() {
         msg!("Lookup table is frozen");
@@ -302,7 +312,7 @@ fn process_deactivate_lookup_table(
         &mut lookup_table_info.try_borrow_mut_data()?,
         lookup_table_meta,
     )
-    .map_to_program_error()?;
+    .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToSerialize.into())?;
 
     Ok(())
 }
@@ -331,8 +341,8 @@ fn process_close_lookup_table(
     }
 
     let lookup_table_data = lookup_table_info.data.borrow();
-    let lookup_table =
-        AddressLookupTable::deserialize(&lookup_table_data).map_to_program_error()?;
+    let lookup_table = AddressLookupTable::deserialize(&lookup_table_data)
+        .map_err::<ProgramError, _>(|_| AddressLookupError::FailedToDeserialize.into())?;
 
     if lookup_table.meta.authority.is_none() {
         msg!("Lookup table is frozen");
@@ -368,17 +378,16 @@ fn process_close_lookup_table(
     **lookup_table_info.try_borrow_mut_lamports()? = 0;
     **recipient_info.try_borrow_mut_lamports()? = new_recipient_lamports;
 
+    // Address Lookup Tables are not reassigned since they are derived from
+    // a particular slot.
     lookup_table_info.realloc(0, true)?;
-    // TODO: Existing program does not reassign
-    // lookup_table_info.assign(&system_program::id());
 
     Ok(())
 }
 
 /// Processes an `AddressLookupInstruction`
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], input: &[u8]) -> ProgramResult {
-    let instruction: AddressLookupInstruction =
-        limited_deserialize(input, PACKET_DATA_SIZE as u64).map_to_program_error()?;
+    let instruction: AddressLookupInstruction = limited_deserialize(input)?;
     match instruction {
         AddressLookupInstruction::CreateLookupTable {
             recent_slot,
