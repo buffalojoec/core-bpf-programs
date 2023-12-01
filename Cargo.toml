@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "address-lookup-table/program"
+    "address-lookup-table/program",
+    "test-harness"
 ]
 
 resolver = "2"

@@ -1,0 +1,34 @@
+// Address Lookup Table Program
+
+use specifications::{Address, Slot};
+
+struct LookupTableMeta {
+    /// Lookup tables cannot be closed until the deactivation slot is
+    /// no longer "recent" (not accessible in the `SlotHashes` sysvar).
+    deactivation_slot: Slot,
+    /// The slot that the table was last extended. Address tables may
+    /// only be used to lookup addresses that were extended before
+    /// the current bank's slot.
+    last_extended_slot: Slot,
+    /// The start index where the table was last extended from during
+    /// the `last_extended_slot`.
+    last_extended_slot_start_index: u8,
+    /// Authority address which must sign for each modification.
+    authority: Option<Address>,
+    // Padding to keep addresses 8-byte aligned
+    _padding: u16,
+    // Raw list of addresses follows this serialized structure in
+    // the account's data, starting from `LOOKUP_TABLE_META_SIZE`.
+}
+
+enum ProgramState {
+    // Account is not initialized.
+    Uninitialized,
+    // Initialized `LookupTable` account.
+    LookupTable(LookupTableMeta),
+}
+
+struct AddressLookupTable {
+    meta: LookupTableMeta,
+    addresses: Address[],
+}

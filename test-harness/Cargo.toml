@@ -1,0 +1,8 @@
+[package]
+name = "solana-core-bpf-test-harness"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+solana-program-test = "1.17.7"
+solana-sdk = "1.17.7"
