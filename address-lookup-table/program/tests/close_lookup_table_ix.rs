@@ -8,13 +8,13 @@ use {
     },
     solana_program_test::*,
     solana_sdk::{
+        address_lookup_table::instruction::close_lookup_table,
         clock::Clock,
         instruction::InstructionError,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
-    spl_address_lookup_table::instruction::close_lookup_table,
 };
 
 mod common;

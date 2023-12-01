@@ -1,5 +1,7 @@
 #![cfg(feature = "test-sbf")]
+
 #![allow(dead_code)]
+
 use {
     solana_program_test::*,
     solana_sdk::{
@@ -21,9 +23,9 @@ use {
 
 pub async fn setup_test_context() -> ProgramTestContext {
     let program_test = ProgramTest::new(
-        "",
+        "solana_address_lookup_table_program",
         id(),
-        Some(solana_address_lookup_table_program::processor::Entrypoint::vm),
+        processor!(solana_address_lookup_table_program::processor::process),
     );
     program_test.start_with_context().await
 }

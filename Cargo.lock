@@ -3378,6 +3378,24 @@ dependencies = [
 
 [[package]]
 name = "solana-address-lookup-table-program"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "bincode",
+ "bytemuck",
+ "log",
+ "serde",
+ "solana-frozen-abi",
+ "solana-frozen-abi-macro",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-pod",
+ "spl-program-error",
+]
+
+[[package]]
+name = "solana-address-lookup-table-program"
 version = "1.17.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0209bbb9e62330a4850ede86fc5e808a7e78d235963f60732041f96fe911e9f3"
@@ -3587,7 +3605,7 @@ dependencies = [
  "lazy_static",
  "log",
  "rustc_version",
- "solana-address-lookup-table-program",
+ "solana-address-lookup-table-program 1.17.6",
  "solana-bpf-loader-program",
  "solana-compute-budget-program",
  "solana-config-program",
@@ -4043,7 +4061,7 @@ dependencies = [
  "serde_json",
  "siphasher",
  "solana-accounts-db",
- "solana-address-lookup-table-program",
+ "solana-address-lookup-table-program 1.17.6",
  "solana-bpf-loader-program",
  "solana-bucket-map",
  "solana-compute-budget-program",
@@ -4437,24 +4455,6 @@ checksum = "44d01ac02a6ccf3e07db148d2be087da624fea0221a16152ed01f0496a6b0a27"
 dependencies = [
  "base64ct",
  "der",
-]
-
-[[package]]
-name = "spl-address-lookup-table"
-version = "0.1.0"
-dependencies = [
- "assert_matches",
- "bincode",
- "bytemuck",
- "log",
- "serde",
- "solana-frozen-abi",
- "solana-frozen-abi-macro",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-pod",
- "spl-program-error",
 ]
 
 [[package]]

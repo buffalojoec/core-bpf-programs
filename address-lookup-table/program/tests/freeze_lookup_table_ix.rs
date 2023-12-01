@@ -7,12 +7,12 @@ use {
     },
     solana_program_test::*,
     solana_sdk::{
+        address_lookup_table::{instruction::freeze_lookup_table, state::AddressLookupTable},
         instruction::InstructionError,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
-    spl_address_lookup_table::{instruction::freeze_lookup_table, state::AddressLookupTable},
 };
 
 mod common;
