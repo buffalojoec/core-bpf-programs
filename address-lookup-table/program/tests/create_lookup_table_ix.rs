@@ -5,13 +5,19 @@ use {
     common::{assert_ix_error, overwrite_slot_hashes_with_slots, setup_test_context},
     solana_program_test::*,
     solana_sdk::{
-        clock::Slot, feature_set, instruction::InstructionError, pubkey::Pubkey, rent::Rent,
-        signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    },
-    spl_address_lookup_table::{
-        id,
-        instruction::{create_lookup_table, create_lookup_table_signed},
-        state::{AddressLookupTable, LOOKUP_TABLE_META_SIZE},
+        address_lookup_table::{
+            instruction::{create_lookup_table, create_lookup_table_signed},
+            program::id,
+            state::{AddressLookupTable, LOOKUP_TABLE_META_SIZE},
+        },
+        clock::Slot,
+        feature_set,
+        instruction::InstructionError,
+        pubkey::Pubkey,
+        rent::Rent,
+        signature::Signer,
+        signer::keypair::Keypair,
+        transaction::Transaction,
     },
 };
 
@@ -19,9 +25,9 @@ mod common;
 
 pub async fn setup_test_context_without_authority_feature() -> ProgramTestContext {
     let mut program_test = ProgramTest::new(
-        "",
+        "solana_address_lookup_table_program",
         id(),
-        Some(solana_address_lookup_table_program::processor::Entrypoint::vm),
+        processor!(solana_address_lookup_table_program::processor::process),
     );
     program_test.deactivate_feature(
         feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),

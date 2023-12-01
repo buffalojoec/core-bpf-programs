@@ -1,16 +1,16 @@
 //! Program state processor
 
 use {
-    crate::{
-        error::{AddressLookupError, ToProgramError},
-        instruction::AddressLookupInstruction,
-        state::{
-            AddressLookupTable, LookupTableMeta, LookupTableStatus, ProgramState,
-            LOOKUP_TABLE_MAX_ADDRESSES, LOOKUP_TABLE_META_SIZE,
-        },
-    },
+    crate::error::{AddressLookupError, ToProgramError},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
+        address_lookup_table::{
+            instruction::ProgramInstruction as AddressLookupInstruction,
+            state::{
+                AddressLookupTable, LookupTableMeta, LookupTableStatus, ProgramState,
+                LOOKUP_TABLE_MAX_ADDRESSES, LOOKUP_TABLE_META_SIZE,
+            },
+        },
         clock::{Clock, Slot},
         entrypoint::ProgramResult,
         msg,

@@ -8,15 +8,15 @@ use {
     solana_program_test::*,
     solana_sdk::{
         account::{ReadableAccount, WritableAccount},
+        address_lookup_table::{
+            instruction::extend_lookup_table,
+            state::{AddressLookupTable, LookupTableMeta},
+        },
         clock::Clock,
         instruction::{Instruction, InstructionError},
         pubkey::{Pubkey, PUBKEY_BYTES},
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
-    },
-    spl_address_lookup_table::{
-        instruction::extend_lookup_table,
-        state::{AddressLookupTable, LookupTableMeta},
     },
     std::{borrow::Cow, result::Result},
 };

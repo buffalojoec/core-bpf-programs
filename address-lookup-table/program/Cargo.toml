@@ -1,5 +1,5 @@
 [package]
-name = "spl-address-lookup-table"
+name = "solana-address-lookup-table-program"
 version = "0.1.0"
 edition = "2021"
 
