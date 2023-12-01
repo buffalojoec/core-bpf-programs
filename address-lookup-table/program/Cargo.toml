@@ -1,5 +1,5 @@
 [package]
-name = "address-lookup-table"
+name = "spl-address-lookup-table"
 version = "0.1.0"
 edition = "2021"
 
@@ -20,3 +20,8 @@ spl-program-error = "0.3.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+solana-program-test = "1.17.6"
+solana-sdk = "1.17.6"
