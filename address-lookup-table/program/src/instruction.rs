@@ -1,3 +1,5 @@
+//! Program instructions
+
 use {
     serde::{Deserialize, Serialize},
     solana_program::{
