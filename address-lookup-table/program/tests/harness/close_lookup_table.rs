@@ -1,12 +1,11 @@
 #![cfg(feature = "test-sbf")]
 
 use {
-    assert_matches::assert_matches,
-    common::{
+    super::common::{
         add_lookup_table_account, assert_ix_error, new_address_lookup_table,
         overwrite_slot_hashes_with_slots, setup_test_context,
     },
-    solana_program_test::*,
+    assert_matches::assert_matches,
     solana_sdk::{
         address_lookup_table::instruction::close_lookup_table,
         clock::Clock,
@@ -17,11 +16,8 @@ use {
     },
 };
 
-mod common;
-
-#[tokio::test]
-async fn test_close_lookup_table() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
     overwrite_slot_hashes_with_slots(&context, &[]);
 
     let lookup_table_address = Pubkey::new_unique();
@@ -55,9 +51,8 @@ async fn test_close_lookup_table() {
         .is_none());
 }
 
-#[tokio::test]
-async fn test_close_lookup_table_not_deactivated() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table_not_deactivated(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority_keypair = Keypair::new();
     let initialized_table = new_address_lookup_table(Some(authority_keypair.pubkey()), 0);
@@ -80,9 +75,8 @@ async fn test_close_lookup_table_not_deactivated() {
     .await;
 }
 
-#[tokio::test]
-async fn test_close_lookup_table_deactivated_in_current_slot() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table_deactivated_in_current_slot(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
     let authority_keypair = Keypair::new();
@@ -112,9 +106,8 @@ async fn test_close_lookup_table_deactivated_in_current_slot() {
     .await;
 }
 
-#[tokio::test]
-async fn test_close_lookup_table_recently_deactivated() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table_recently_deactivated(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority_keypair = Keypair::new();
     let initialized_table = {
@@ -143,9 +136,8 @@ async fn test_close_lookup_table_recently_deactivated() {
     .await;
 }
 
-#[tokio::test]
-async fn test_close_immutable_lookup_table() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_immutable_lookup_table(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let initialized_table = new_address_lookup_table(None, 10);
     let lookup_table_address = Pubkey::new_unique();
@@ -167,9 +159,8 @@ async fn test_close_immutable_lookup_table() {
     .await;
 }
 
-#[tokio::test]
-async fn test_close_lookup_table_with_wrong_authority() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table_with_wrong_authority(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let wrong_authority = Keypair::new();
@@ -192,9 +183,8 @@ async fn test_close_lookup_table_with_wrong_authority() {
     .await;
 }
 
-#[tokio::test]
-async fn test_close_lookup_table_without_signing() {
-    let mut context = setup_test_context().await;
+pub async fn test_close_lookup_table_without_signing(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let initialized_table = new_address_lookup_table(Some(authority.pubkey()), 10);

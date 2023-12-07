@@ -1,10 +1,11 @@
 #![cfg(feature = "test-sbf")]
+#![allow(clippy::arithmetic_side_effects)]
 
 use {
-    assert_matches::assert_matches,
-    common::{
+    super::common::{
         add_lookup_table_account, assert_ix_error, new_address_lookup_table, setup_test_context,
     },
+    assert_matches::assert_matches,
     solana_program_test::*,
     solana_sdk::{
         account::{ReadableAccount, WritableAccount},
@@ -20,8 +21,6 @@ use {
     },
     std::{borrow::Cow, result::Result},
 };
-
-mod common;
 
 struct ExpectedTableAccount {
     lamports: u64,
@@ -79,9 +78,8 @@ async fn run_test_case(context: &mut ProgramTestContext, test_case: TestCase<'_>
     }
 }
 
-#[tokio::test]
-async fn test_extend_lookup_table() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_lookup_table(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
     let authority = Keypair::new();
     let current_bank_slot = 1;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -158,9 +156,8 @@ async fn test_extend_lookup_table() {
     }
 }
 
-#[tokio::test]
-async fn test_extend_lookup_table_with_wrong_authority() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_lookup_table_with_wrong_authority(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let wrong_authority = Keypair::new();
@@ -185,9 +182,8 @@ async fn test_extend_lookup_table_with_wrong_authority() {
     .await;
 }
 
-#[tokio::test]
-async fn test_extend_lookup_table_without_signing() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_lookup_table_without_signing(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let initialized_table = new_address_lookup_table(Some(authority.pubkey()), 10);
@@ -212,9 +208,8 @@ async fn test_extend_lookup_table_without_signing() {
     .await;
 }
 
-#[tokio::test]
-async fn test_extend_deactivated_lookup_table() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_deactivated_lookup_table(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let initialized_table = {
@@ -242,9 +237,8 @@ async fn test_extend_deactivated_lookup_table() {
     .await;
 }
 
-#[tokio::test]
-async fn test_extend_immutable_lookup_table() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_immutable_lookup_table(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let initialized_table = new_address_lookup_table(None, 1);
@@ -268,9 +262,8 @@ async fn test_extend_immutable_lookup_table() {
     .await;
 }
 
-#[tokio::test]
-async fn test_extend_lookup_table_without_payer() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_lookup_table_without_payer(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let initialized_table = new_address_lookup_table(Some(authority.pubkey()), 0);
@@ -294,9 +287,8 @@ async fn test_extend_lookup_table_without_payer() {
     .await;
 }
 
-#[tokio::test]
-async fn test_extend_prepaid_lookup_table_without_payer() {
-    let mut context = setup_test_context().await;
+pub async fn test_extend_prepaid_lookup_table_without_payer(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let authority = Keypair::new();
     let lookup_table_address = Pubkey::new_unique();

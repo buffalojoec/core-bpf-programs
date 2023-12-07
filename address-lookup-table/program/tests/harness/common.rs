@@ -1,5 +1,4 @@
 #![cfg(feature = "test-sbf")]
-#![allow(dead_code)]
 
 use {
     solana_program_test::*,
@@ -20,12 +19,8 @@ use {
     std::borrow::Cow,
 };
 
-pub async fn setup_test_context() -> ProgramTestContext {
-    let program_test = ProgramTest::new(
-        "solana_address_lookup_table_program",
-        id(),
-        processor!(solana_address_lookup_table_program::processor::process),
-    );
+pub async fn setup_test_context(program_file: &str) -> ProgramTestContext {
+    let program_test = ProgramTest::new(program_file, id(), None);
     program_test.start_with_context().await
 }
 
