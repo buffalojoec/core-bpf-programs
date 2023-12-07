@@ -1,8 +1,8 @@
 #![cfg(feature = "test-sbf")]
 
 use {
+    super::common::{assert_ix_error, overwrite_slot_hashes_with_slots, setup_test_context},
     assert_matches::assert_matches,
-    common::{assert_ix_error, overwrite_slot_hashes_with_slots, setup_test_context},
     solana_program_test::*,
     solana_sdk::{
         address_lookup_table::{
@@ -21,23 +21,16 @@ use {
     },
 };
 
-mod common;
-
-pub async fn setup_test_context_without_authority_feature() -> ProgramTestContext {
-    let mut program_test = ProgramTest::new(
-        "solana_address_lookup_table_program",
-        id(),
-        processor!(solana_address_lookup_table_program::processor::process),
-    );
+async fn setup_test_context_without_authority_feature(program_file: &str) -> ProgramTestContext {
+    let mut program_test = ProgramTest::new(program_file, id(), None);
     program_test.deactivate_feature(
         feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
     );
     program_test.start_with_context().await
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_idempotent() {
-    let mut context = setup_test_context().await;
+pub async fn test_create_lookup_table_idempotent(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&context, &[test_recent_slot]);
@@ -95,9 +88,8 @@ async fn test_create_lookup_table_idempotent() {
     }
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_not_idempotent() {
-    let mut context = setup_test_context_without_authority_feature().await;
+pub async fn test_create_lookup_table_not_idempotent(program_file: &str) {
+    let mut context = setup_test_context_without_authority_feature(program_file).await;
 
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&context, &[test_recent_slot]);
@@ -135,9 +127,8 @@ async fn test_create_lookup_table_not_idempotent() {
     }
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_use_payer_as_authority() {
-    let mut context = setup_test_context().await;
+pub async fn test_create_lookup_table_use_payer_as_authority(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
 
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&context, &[test_recent_slot]);
@@ -156,9 +147,8 @@ async fn test_create_lookup_table_use_payer_as_authority() {
     assert_matches!(client.process_transaction(transaction).await, Ok(()));
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_missing_signer() {
-    let mut context = setup_test_context_without_authority_feature().await;
+pub async fn test_create_lookup_table_missing_signer(program_file: &str) {
+    let mut context = setup_test_context_without_authority_feature(program_file).await;
     let unsigned_authority_address = Pubkey::new_unique();
 
     let mut ix = create_lookup_table_signed(
@@ -178,9 +168,8 @@ async fn test_create_lookup_table_missing_signer() {
     .await;
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_not_recent_slot() {
-    let mut context = setup_test_context().await;
+pub async fn test_create_lookup_table_not_recent_slot(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
     let payer = &context.payer;
     let authority_address = Pubkey::new_unique();
 
@@ -195,9 +184,8 @@ async fn test_create_lookup_table_not_recent_slot() {
     .await;
 }
 
-#[tokio::test]
-async fn test_create_lookup_table_pda_mismatch() {
-    let mut context = setup_test_context().await;
+pub async fn test_create_lookup_table_pda_mismatch(program_file: &str) {
+    let mut context = setup_test_context(program_file).await;
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&context, &[test_recent_slot]);
     let payer = &context.payer;

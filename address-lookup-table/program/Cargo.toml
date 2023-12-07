@@ -18,10 +18,16 @@ solana-program = "1.17.7"
 spl-pod = "0.1.0"
 spl-program-error = "0.3.0"
 
+[dev-dependencies]
+assert_matches = "1.5.0"
+libtest-mimic = "0.6"
+solana-program-test = "1.17.7"
+solana-sdk = "1.17.7"
+
 [lib]
 crate-type = ["cdylib", "lib"]
 
-[dev-dependencies]
-assert_matches = "1.5.0"
-solana-program-test = "1.17.7"
-solana-sdk = "1.17.7"
+[[test]]
+name = "main"
+path = "tests/main.rs"
+harness = false
